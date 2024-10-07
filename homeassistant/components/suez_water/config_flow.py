@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import CONF_COUNTER_ID, DOMAIN
+from .const import CONF_COUNTER_ID, CONF_WITHOUT_OLD, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_COUNTER_ID): str,
+        vol.Optional(CONF_COUNTER_ID): str,
     }
 )
 
@@ -32,14 +32,16 @@ def validate_input(data: dict[str, Any]) -> None:
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     try:
+        counter = data.get(CONF_COUNTER_ID)
         client = SuezClient(
             data[CONF_USERNAME],
             data[CONF_PASSWORD],
-            data[CONF_COUNTER_ID],
-            provider=None,
+            counter,
         )
         if not client.check_credentials():
             raise InvalidAuth
+        if counter is None:
+            data[CONF_COUNTER_ID] = client.counter_finder()
     except PySuezError as ex:
         raise CannotConnect from ex
 
@@ -67,12 +69,37 @@ class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                data = {**user_input}
+                data[CONF_WITHOUT_OLD] = True
                 return self.async_create_entry(
-                    title=user_input[CONF_USERNAME], data=user_input
+                    title=f"suez_{user_input[CONF_COUNTER_ID]}", data=data
                 )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure suez water."""
+        if user_input is not None:
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(),
+                data_updates={CONF_WITHOUT_OLD: user_input.get(CONF_WITHOUT_OLD)},
+            )
+        entry = self._get_reconfigure_entry()
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_WITHOUT_OLD,
+                        default=entry.data.get(CONF_WITHOUT_OLD, False),
+                    ): bool
+                }
+            ),
         )
 
 
