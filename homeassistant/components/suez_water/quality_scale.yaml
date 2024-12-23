@@ -32,7 +32,7 @@ rules:
   action-exceptions:
     status: exempt
     comment: no service action
-  reauthentication-flow: todo
+  reauthentication-flow: done
   parallel-updates:
     status: exempt
     comment: no service action and coordinator updates

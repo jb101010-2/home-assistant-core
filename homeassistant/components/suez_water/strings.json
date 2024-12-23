@@ -13,6 +13,18 @@
           "counter_id": "Enter your meter id (ex: 12345678). Should be found automatically during setup, if not see integration documentation for more information"
         },
         "description": "Connect your suez water {tout_sur_mon_eau} account to retrieve your water consumption"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Suez water integrztion for meter \"{meter_id}\" {tout_sur_mon_eau} account needs to be re-authenticated",
+        "data_description": {
+          "username": "Enter your login associated with your {tout_sur_mon_eau} account",
+          "password": "Enter your password associated with your {tout_sur_mon_eau} account"
+        }
       }
     },
     "error": {
@@ -22,7 +34,9 @@
       "counter_not_found": "Could not find meter id automatically"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The meter id does not match the previous one."
     }
   },
   "entity": {

@@ -7,9 +7,11 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.suez_water.const import CONF_COUNTER_ID, DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import setup_integration
 from .conftest import MOCK_DATA
 
 from tests.common import MockConfigEntry
@@ -166,3 +168,61 @@ async def test_form_auto_counter(
     assert result["result"].unique_id == MOCK_DATA[CONF_COUNTER_ID]
     assert result["data"] == MOCK_DATA
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reauth_new_counter(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    suez_client: AsyncMock,
+) -> None:
+    """Test we reauth auth."""
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    suez_client.find_counter.return_value = "another-counter"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-another-username",
+            CONF_PASSWORD: "test-another-password",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+
+
+async def test_reauth_successfull(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    suez_client: AsyncMock,
+) -> None:
+    """Test we reauth auth."""
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    suez_client.check_credentials.return_value = False
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-another-username",
+            CONF_PASSWORD: "test-another-password",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    suez_client.check_credentials.return_value = True
+    suez_client.find_counter.return_value = MOCK_DATA[CONF_COUNTER_ID]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-another-username",
+            CONF_PASSWORD: "test-another-password",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
