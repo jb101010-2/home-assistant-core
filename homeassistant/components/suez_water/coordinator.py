@@ -2,16 +2,19 @@
 
 from dataclasses import dataclass
 from datetime import date
+import logging
 
 from pysuez import PySuezError, SuezClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import _LOGGER, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_COUNTER_ID, DATA_REFRESH_INTERVAL, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -85,9 +88,12 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
                 price=(await self._suez_client.get_price()).price,
             )
         except PySuezError as err:
-            _LOGGER.exception(err)
             raise UpdateFailed(
                 f"Suez coordinator error communicating with API: {err}"
             ) from err
         _LOGGER.debug("Successfully fetched suez data")
         return data
+
+    async def close_session(self) -> None:
+        """Close existing session to Suez api."""
+        await self._suez_client.close_session()

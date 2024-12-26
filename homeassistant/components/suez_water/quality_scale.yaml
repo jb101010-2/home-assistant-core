@@ -26,9 +26,7 @@ rules:
   brands: done
 
   # Silver
-  config-entry-unloading:
-    status: todo
-    comment: cleanly close session
+  config-entry-unloading: done
   log-when-unavailable: todo
   entity-unavailable: done
   action-exceptions:

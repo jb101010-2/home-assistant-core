@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import logging
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import SuezWaterConfigEntry, SuezWaterCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SuezWaterConfigEntry) -> bool:
@@ -24,5 +28,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SuezWaterConfigEntry) ->
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: SuezWaterConfigEntry) -> bool:
-    """Unload a config entry."""
+    """Unload suez_water config entry."""
+
+    try:
+        await entry.runtime_data.close_session()
+    except Exception:
+        _LOGGER.exception("Failed to close session to suez API")
+        return False
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
