@@ -64,3 +64,21 @@ async def async_migrate_entry(
     )
 
     return True
+
+
+# Devices TODO list
+# 1. Find a way to uniquely identify integration ?
+# 2. Dynamically create device based on meter id or client ref ?
+# 3. One coordinator for all devices vs one per device ?
+# 4. How to register device ?
+# 5. How to remember that user removed device ? device disabled ?
+# 6. Configuration_url => path to reconfigure flow ?
+# 7. Fetch data in coordinator per device ?
+# 8. ??????????
+
+#  Suez action when changing contract
+# /mon-compte-en-ligne/redirect/98-5537172589?redirect=/mon-compte-en-ligne/tableau-de-bord
+#         t.REDIRECT_CEL_URL = "/mon-compte-en-ligne/redirect/:fullRefFormat?redirect=:pathname",
+# var r = t.fullRefFormat, n = window.location.pathname;
+# window.location.pathname => '/mon-compte-en-ligne/tableau-de-bord'
+#                             window.location.href = p.REDIRECT_CEL_URL.replace(":fullRefFormat", r).replace(":pathname", n)

@@ -19,7 +19,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_COUNTER_ID, DOMAIN
+from .const import CONF_COUNTER_ID, DOMAIN, SUEZ_BRAND
 from .coordinator import SuezWaterConfigEntry, SuezWaterCoordinator, SuezWaterData
 
 
@@ -83,7 +83,9 @@ class SuezWaterSensor(CoordinatorEntity[SuezWaterCoordinator], SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(counter_id))},
             entry_type=DeviceEntryType.SERVICE,
-            manufacturer="Suez",
+            manufacturer=SUEZ_BRAND,
+            name=str(counter_id),
+            serial_number=str(counter_id)
         )
         self.entity_description = entity_description
 

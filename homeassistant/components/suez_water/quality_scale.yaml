@@ -51,8 +51,8 @@ rules:
   entity-translations: done
   entity-device-class: done
   devices:
-    status: todo
-    comment: see https://github.com/home-assistant/core/pull/134027#discussion_r1898732463
+    status: done
+    comment: one device per integration only
   entity-category:
     status: done
     comment: default class is fine
